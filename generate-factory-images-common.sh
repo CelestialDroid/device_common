@@ -12,6 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+ZIP_LOCATION=obj/PACKAGING/target_files_intermediates/
+CELESTIAL_BUILD=$(ls -Art $OUT/$ZIP_LOCATION | tail -n 1 | sed -e 's|-cheetah-target_files.zip||g')
+
 # Use the default values if they weren't explicitly set
 if test "$XLOADERSRC" = ""
 then
@@ -32,63 +35,67 @@ fi
 
 # Prepare the staging directory
 rm -rf tmp
-mkdir -p tmp/$PRODUCT-$VERSION
+mkdir -p tmp/$CELESTIAL_BUILD-$PRODUCT-$VERSION
 
 # Extract the bootloader(s) and radio(s) as necessary
 if test "$XLOADER" != ""
 then
-  unzip -d tmp ${SRCPREFIX}$PRODUCT-target_files.zip RADIO/$XLOADERSRC
+  echo "$XLOADER"
+  unzip -d tmp ${SRCPREFIX}$CELESTIAL_BUILD-$PRODUCT-target_files.zip RADIO/$XLOADERSRC
 fi
 if test "$BOOTLOADERFILE" = ""
 then
-  unzip -d tmp ${SRCPREFIX}$PRODUCT-target_files.zip RADIO/$BOOTLOADERSRC
+  echo "$BOOTLOADERFILE"
+  unzip -d tmp ${SRCPREFIX}$CELESTIAL_BUILD-$PRODUCT-target_files.zip RADIO/$BOOTLOADERSRC
 fi
 if test "$RADIO" != "" -a "$RADIOFILE" = ""
 then
-  unzip -d tmp ${SRCPREFIX}$PRODUCT-target_files.zip RADIO/$RADIOSRC
+  echo "$RADIO"
+  unzip -d tmp ${SRCPREFIX}$CELESTIAL_BUILD-$PRODUCT-target_files.zip RADIO/$RADIOSRC
 fi
 if test "$CDMARADIO" != "" -a "$CDMARADIOFILE" = ""
 then
-  unzip -d tmp ${SRCPREFIX}$PRODUCT-target_files.zip RADIO/radio-cdma.img
+  echo "$CDMARADIO"
+  unzip -d tmp ${SRCPREFIX}$CELESTIAL_BUILD-$PRODUCT-target_files.zip RADIO/radio-cdma.img
 fi
 
 # Copy the various images in their staging location
-cp ${SRCPREFIX}$PRODUCT-img-$BUILD.zip tmp/$PRODUCT-$VERSION/image-$PRODUCT-$VERSION.zip
+cp ${SRCPREFIX}$CELESTIAL_BUILD-$PRODUCT-img-$BUILD.zip tmp/$CELESTIAL_BUILD-$PRODUCT-$VERSION/image-$CELESTIAL_BUILD-$PRODUCT-$VERSION.zip
 if test "$XLOADER" != ""
 then
-  cp tmp/RADIO/$XLOADERSRC tmp/$PRODUCT-$VERSION/xloader-$DEVICE-$XLOADER.img
+  cp tmp/RADIO/$XLOADERSRC tmp/$CELESTIAL_BUILD-$PRODUCT-$VERSION/xloader-$DEVICE-$XLOADER.img
 fi
 if test "$BOOTLOADERFILE" = ""
 then
-  cp tmp/RADIO/$BOOTLOADERSRC tmp/$PRODUCT-$VERSION/bootloader-$DEVICE-$BOOTLOADER.img
+  cp tmp/RADIO/$BOOTLOADERSRC tmp/$CELESTIAL_BUILD-$PRODUCT-$VERSION/bootloader-$DEVICE-$BOOTLOADER.img
 else
-  cp $BOOTLOADERFILE tmp/$PRODUCT-$VERSION/bootloader-$DEVICE-$BOOTLOADER.img
+  cp $BOOTLOADERFILE tmp/$CELESTIAL_BUILD-$PRODUCT-$VERSION/bootloader-$DEVICE-$BOOTLOADER.img
 fi
 if test "$RADIO" != ""
 then
   if test "$RADIOFILE" = ""
   then
-    cp tmp/RADIO/$RADIOSRC tmp/$PRODUCT-$VERSION/radio-$DEVICE-$RADIO.img
+    cp tmp/RADIO/$RADIOSRC tmp/$CELESTIAL_BUILD-$PRODUCT-$VERSION/radio-$DEVICE-$RADIO.img
   else
-    cp $RADIOFILE tmp/$PRODUCT-$VERSION/radio-$DEVICE-$RADIO.img
+    cp $RADIOFILE tmp/$CELESTIAL_BUILD-$PRODUCT-$VERSION/radio-$DEVICE-$RADIO.img
   fi
 fi
 if test "$CDMARADIO" != ""
 then
   if test "$CDMARADIOFILE" = ""
   then
-    cp tmp/RADIO/radio-cdma.img tmp/$PRODUCT-$VERSION/radio-cdma-$DEVICE-$CDMARADIO.img
+    cp tmp/RADIO/radio-cdma.img tmp/$CELESTIAL_BUILD-$PRODUCT-$VERSION/radio-cdma-$DEVICE-$CDMARADIO.img
   else
-    cp $CDMARADIOFILE tmp/$PRODUCT-$VERSION/radio-cdma-$DEVICE-$CDMARADIO.img
+    cp $CDMARADIOFILE tmp/$CELESTIAL_BUILD-$PRODUCT-$VERSION/radio-cdma-$DEVICE-$CDMARADIO.img
   fi
 fi
 if test "$AVB_PKMD" != ""
 then
-  cp "$AVB_PKMD" tmp/$PRODUCT-$VERSION/avb_pkmd.bin
+  cp "$AVB_PKMD" tmp/$CELESTIAL_BUILD-$PRODUCT-$VERSION/avb_pkmd.bin
 fi
 
 # Write flash-all.sh
-cat > tmp/$PRODUCT-$VERSION/flash-all.sh << EOF
+cat > tmp/$CELESTIAL_BUILD-$PRODUCT-$VERSION/flash-all.sh << EOF
 #!/bin/sh
 
 #    SSSSSSSSSSSSSSS  TTTTTTTTTTTTTTTTTTTTTTT      OOOOOOOOO      PPPPPPPPPPPPPPPPP
@@ -149,13 +156,13 @@ fi
 EOF
 if test "$UNLOCKBOOTLOADER" = "true"
 then
-cat >> tmp/$PRODUCT-$VERSION/flash-all.sh << EOF
+cat >> tmp/$CELESTIAL_BUILD-$PRODUCT-$VERSION/flash-all.sh << EOF
 fastboot oem unlock
 EOF
 fi
 if test "$ERASEALL" = "true"
 then
-cat >> tmp/$PRODUCT-$VERSION/flash-all.sh << EOF
+cat >> tmp/$CELESTIAL_BUILD-$PRODUCT-$VERSION/flash-all.sh << EOF
 fastboot erase boot
 fastboot erase cache
 fastboot erase recovery
@@ -165,11 +172,11 @@ EOF
 fi
 if test "$XLOADER" != ""
 then
-cat >> tmp/$PRODUCT-$VERSION/flash-all.sh << EOF
+cat >> tmp/$CELESTIAL_BUILD-$PRODUCT-$VERSION/flash-all.sh << EOF
 fastboot flash xloader xloader-$DEVICE-$XLOADER.img
 EOF
 fi
-cat >> tmp/$PRODUCT-$VERSION/flash-all.sh << EOF
+cat >> tmp/$CELESTIAL_BUILD-$PRODUCT-$VERSION/flash-all.sh << EOF
 fastboot flash --slot=other bootloader bootloader-$DEVICE-$BOOTLOADER.img
 fastboot --set-active=other
 fastboot reboot-bootloader
@@ -179,17 +186,17 @@ fastboot --set-active=other
 EOF
 if test "$TWINBOOTLOADERS" = "true"
 then
-cat >> tmp/$PRODUCT-$VERSION/flash-all.sh << EOF
+cat >> tmp/$CELESTIAL_BUILD-$PRODUCT-$VERSION/flash-all.sh << EOF
 fastboot flash bootloader2 bootloader-$DEVICE-$BOOTLOADER.img
 EOF
 fi
-cat >> tmp/$PRODUCT-$VERSION/flash-all.sh << EOF
+cat >> tmp/$CELESTIAL_BUILD-$PRODUCT-$VERSION/flash-all.sh << EOF
 fastboot reboot-bootloader
 sleep $SLEEPDURATION
 EOF
 if test "$RADIO" != ""
 then
-cat >> tmp/$PRODUCT-$VERSION/flash-all.sh << EOF
+cat >> tmp/$CELESTIAL_BUILD-$PRODUCT-$VERSION/flash-all.sh << EOF
 fastboot flash radio radio-$DEVICE-$RADIO.img
 fastboot reboot-bootloader
 sleep $SLEEPDURATION
@@ -197,7 +204,7 @@ EOF
 fi
 if test "$CDMARADIO" != ""
 then
-cat >> tmp/$PRODUCT-$VERSION/flash-all.sh << EOF
+cat >> tmp/$CELESTIAL_BUILD-$PRODUCT-$VERSION/flash-all.sh << EOF
 fastboot flash radio-cdma radio-cdma-$DEVICE-$CDMARADIO.img
 fastboot reboot-bootloader
 sleep $SLEEPDURATION
@@ -205,7 +212,7 @@ EOF
 fi
 if test "$AVB_PKMD" != ""
 then
-cat >> tmp/$PRODUCT-$VERSION/flash-all.sh << EOF
+cat >> tmp/$CELESTIAL_BUILD-$PRODUCT-$VERSION/flash-all.sh << EOF
 fastboot erase avb_custom_key
 fastboot flash avb_custom_key avb_pkmd.bin
 fastboot reboot-bootloader
@@ -214,47 +221,47 @@ EOF
 fi
 if test "$DISABLE_UART" = "true"
 then
-cat >> tmp/$PRODUCT-$VERSION/flash-all.sh << EOF
+cat >> tmp/$CELESTIAL_BUILD-$PRODUCT-$VERSION/flash-all.sh << EOF
 fastboot oem uart disable
 EOF
 fi
 if test "$ERASE_APDP" = "true"
 then
-cat >> tmp/$PRODUCT-$VERSION/flash-all.sh << EOF
+cat >> tmp/$CELESTIAL_BUILD-$PRODUCT-$VERSION/flash-all.sh << EOF
 fastboot erase apdp_a
 fastboot erase apdp_b
 EOF
 fi
 if test "$ERASE_MSADP" = "true"
 then
-cat >> tmp/$PRODUCT-$VERSION/flash-all.sh << EOF
+cat >> tmp/$CELESTIAL_BUILD-$PRODUCT-$VERSION/flash-all.sh << EOF
 fastboot erase msadp_a
 fastboot erase msadp_b
 EOF
 fi
 if test "$DISABLE_FIPS" = "true"
 then
-cat >> tmp/$PRODUCT-$VERSION/flash-all.sh << EOF
+cat >> tmp/$CELESTIAL_BUILD-$PRODUCT-$VERSION/flash-all.sh << EOF
 fastboot erase fips
 EOF
 fi
 if test "$DISABLE_DPM" = "true"
 then
-cat >> tmp/$PRODUCT-$VERSION/flash-all.sh << EOF
+cat >> tmp/$CELESTIAL_BUILD-$PRODUCT-$VERSION/flash-all.sh << EOF
 fastboot erase dpm_a
 fastboot erase dpm_b
 EOF
 fi
-cat >> tmp/$PRODUCT-$VERSION/flash-all.sh << EOF
+cat >> tmp/$CELESTIAL_BUILD-$PRODUCT-$VERSION/flash-all.sh << EOF
 fastboot snapshot-update cancel
-fastboot -w --skip-reboot update image-$PRODUCT-$VERSION.zip
+fastboot -w --skip-reboot update image-$CELESTIAL_BUILD-$PRODUCT-$VERSION.zip
 fastboot reboot-bootloader
 sleep $SLEEPDURATION
 EOF
-chmod a+x tmp/$PRODUCT-$VERSION/flash-all.sh
+chmod a+x tmp/$CELESTIAL_BUILD-$PRODUCT-$VERSION/flash-all.sh
 
 # Write flash-all.bat
-cat > tmp/$PRODUCT-$VERSION/flash-all.bat << EOF
+cat > tmp/$CELESTIAL_BUILD-$PRODUCT-$VERSION/flash-all.bat << EOF
 @ECHO OFF
 ::    SSSSSSSSSSSSSSS  TTTTTTTTTTTTTTTTTTTTTTT      OOOOOOOOO      PPPPPPPPPPPPPPPPP
 ::  SS:::::::::::::::S T:::::::::::::::::::::T    OO:::::::::OO    P::::::::::::::::P
@@ -330,13 +337,13 @@ if not "%product%" == "$DEVICE" (
 EOF
 if test "$UNLOCKBOOTLOADER" = "true"
 then
-cat >> tmp/$PRODUCT-$VERSION/flash-all.bat << EOF
+cat >> tmp/$CELESTIAL_BUILD-$PRODUCT-$VERSION/flash-all.bat << EOF
 fastboot oem unlock
 EOF
 fi
 if test "$ERASEALL" = "true"
 then
-cat >> tmp/$PRODUCT-$VERSION/flash-all.bat << EOF
+cat >> tmp/$CELESTIAL_BUILD-$PRODUCT-$VERSION/flash-all.bat << EOF
 fastboot erase boot
 fastboot erase cache
 fastboot erase recovery
@@ -346,11 +353,11 @@ EOF
 fi
 if test "$XLOADER" != ""
 then
-cat >> tmp/$PRODUCT-$VERSION/flash-all.bat << EOF
+cat >> tmp/$CELESTIAL_BUILD-$PRODUCT-$VERSION/flash-all.bat << EOF
 fastboot flash xloader xloader-$DEVICE-$XLOADER.img
 EOF
 fi
-cat >> tmp/$PRODUCT-$VERSION/flash-all.bat << EOF
+cat >> tmp/$CELESTIAL_BUILD-$PRODUCT-$VERSION/flash-all.bat << EOF
 fastboot flash --slot=other bootloader bootloader-$DEVICE-$BOOTLOADER.img
 fastboot --set-active=other
 fastboot reboot-bootloader
@@ -360,17 +367,17 @@ fastboot --set-active=other
 EOF
 if test "$TWINBOOTLOADERS" = "true"
 then
-cat >> tmp/$PRODUCT-$VERSION/flash-all.bat << EOF
+cat >> tmp/$CELESTIAL_BUILD-$PRODUCT-$VERSION/flash-all.bat << EOF
 fastboot flash bootloader2 bootloader-$DEVICE-$BOOTLOADER.img
 EOF
 fi
-cat >> tmp/$PRODUCT-$VERSION/flash-all.bat << EOF
+cat >> tmp/$CELESTIAL_BUILD-$PRODUCT-$VERSION/flash-all.bat << EOF
 fastboot reboot-bootloader
 ping -n $SLEEPDURATION 127.0.0.1 >nul
 EOF
 if test "$RADIO" != ""
 then
-cat >> tmp/$PRODUCT-$VERSION/flash-all.bat << EOF
+cat >> tmp/$CELESTIAL_BUILD-$PRODUCT-$VERSION/flash-all.bat << EOF
 fastboot flash radio radio-$DEVICE-$RADIO.img
 fastboot reboot-bootloader
 ping -n $SLEEPDURATION 127.0.0.1 >nul
@@ -378,7 +385,7 @@ EOF
 fi
 if test "$CDMARADIO" != ""
 then
-cat >> tmp/$PRODUCT-$VERSION/flash-all.bat << EOF
+cat >> tmp/$CELESTIAL_BUILD-$PRODUCT-$VERSION/flash-all.bat << EOF
 fastboot flash radio-cdma radio-cdma-$DEVICE-$CDMARADIO.img
 fastboot reboot-bootloader
 ping -n $SLEEPDURATION 127.0.0.1 >nul
@@ -386,7 +393,7 @@ EOF
 fi
 if test "$AVB_PKMD" != ""
 then
-cat >> tmp/$PRODUCT-$VERSION/flash-all.bat << EOF
+cat >> tmp/$CELESTIAL_BUILD-$PRODUCT-$VERSION/flash-all.bat << EOF
 fastboot erase avb_custom_key
 fastboot flash avb_custom_key avb_pkmd.bin
 fastboot reboot-bootloader
@@ -395,40 +402,40 @@ EOF
 fi
 if test "$DISABLE_UART" = "true"
 then
-cat >> tmp/$PRODUCT-$VERSION/flash-all.bat << EOF
+cat >> tmp/$CELESTIAL_BUILD-$PRODUCT-$VERSION/flash-all.bat << EOF
 fastboot oem uart disable
 EOF
 fi
 if test "$ERASE_APDP" = "true"
 then
-cat >> tmp/$PRODUCT-$VERSION/flash-all.bat << EOF
+cat >> tmp/$CELESTIAL_BUILD-$PRODUCT-$VERSION/flash-all.bat << EOF
 fastboot erase apdp_a
 fastboot erase apdp_b
 EOF
 fi
 if test "$ERASE_MSADP" = "true"
 then
-cat >> tmp/$PRODUCT-$VERSION/flash-all.bat << EOF
+cat >> tmp/$CELESTIAL_BUILD-$PRODUCT-$VERSION/flash-all.bat << EOF
 fastboot erase msadp_a
 fastboot erase msadp_b
 EOF
 fi
 if test "$DISABLE_FIPS" = "true"
 then
-cat >> tmp/$PRODUCT-$VERSION/flash-all.bat << EOF
+cat >> tmp/$CELESTIAL_BUILD-$PRODUCT-$VERSION/flash-all.bat << EOF
 fastboot erase fips
 EOF
 fi
 if test "$DISABLE_DPM" = "true"
 then
-cat >> tmp/$PRODUCT-$VERSION/flash-all.bat << EOF
+cat >> tmp/$CELESTIAL_BUILD-$PRODUCT-$VERSION/flash-all.bat << EOF
 fastboot erase dpm_a
 fastboot erase dpm_b
 EOF
 fi
-cat >> tmp/$PRODUCT-$VERSION/flash-all.bat << EOF
+cat >> tmp/$CELESTIAL_BUILD-$PRODUCT-$VERSION/flash-all.bat << EOF
 fastboot snapshot-update cancel
-fastboot -w --skip-reboot update image-$PRODUCT-$VERSION.zip
+fastboot -w --skip-reboot update image-$CELESTIAL_BUILD-$PRODUCT-$VERSION.zip
 fastboot reboot-bootloader
 ping -n $SLEEPDURATION 127.0.0.1 >nul
 
@@ -438,7 +445,7 @@ exit
 EOF
 
 # Create the distributable package
-(cd tmp; mv $PRODUCT-$VERSION $PRODUCT-factory-$VERSION; zip -r ../$PRODUCT-factory-$VERSION.zip $PRODUCT-factory-$VERSION)
+(cd tmp; mv $CELESTIAL_BUILD-$PRODUCT-$VERSION $CELESTIAL_BUILD-$PRODUCT-factory-$VERSION; zip -r ../$CELESTIAL_BUILD-$PRODUCT-factory-$VERSION.zip $CELESTIAL_BUILD-$PRODUCT-factory-$VERSION)
 
 # Clean up
 rm -rf tmp

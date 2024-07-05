@@ -22,7 +22,7 @@ fi
 
 ZIP_TYPE=target_files  # ota | target_files
 
-ZIP=$6-$ZIP_TYPE-$1.zip
+ZIP=$CELESTIAL_BUILD-$6-$ZIP_TYPE-$1.zip
 BUILD=$2
 
 ROOTDEVICE=$3
